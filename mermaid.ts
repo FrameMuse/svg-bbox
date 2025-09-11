@@ -31,8 +31,7 @@ const mermaidConfig: MermaidConfig = {
 mermaid.initialize(mermaidConfig)
 
 
-function fixMermaidSVG(value: string,
-  diagramType: string): string {
+function fixMermaidSVG(value: string, diagramType: string): string {
   if (diagramType === "radar" || diagramType === "packet") {
     // Fix `viewBox` typo.
     value = value.replace("viewbox", "viewBox").replace(/height=".*?" /, "").replace(/width=".*?"/, `width="100%"`)
