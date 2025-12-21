@@ -1,0 +1,40 @@
+{
+  "type": "module",
+  "name": "svg-bbox-polyfill",
+  "version": "0.1.0",
+  "description": "SVG `getBBox` Polyfill",
+  "sideEffects": false,
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "vite build && bun build:types",
+    "build:types": "tsup src/index.ts --outDir build --format esm --dts-only --tsconfig tsconfig.build.json"
+  },
+  "dependencies": {
+    "svg-path-bbox": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.21",
+    "@types/opentype.js": "^1.3.8",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
+    "bun": "^1.2.21",
+    "eslint": "9.34.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.3",
+    "vite-plugin-externalize-deps": "^0.10.0"
+  },
+  "homepage": "https://github.com/pinely-international/svg-bbox#readme",
+  "bugs": {
+    "url": "https://github.com/pinely-international/svg-bbox/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinely-international/svg-bbox.git"
+  },
+  "license": "MIT",
+  "author": "FrameMuse"
+}

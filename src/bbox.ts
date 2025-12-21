@@ -5,11 +5,11 @@
  * Very similar solution with other details: https://stackoverflow.com/a/69801747
  */
 
+import type { Font } from "opentype.js"
 import { svgPathBbox } from "svg-path-bbox"
 
-import { findFontForFamily } from "./font-load"
 
-function computeLineBBox(line: SVGLineElement): DOMRect {
+export function computeLine(line: SVGLineElement): DOMRect {
   const x1 = parseFloat(line.getAttribute("x1") ?? "0")
   const y1 = parseFloat(line.getAttribute("y1") ?? "0")
   const x2 = parseFloat(line.getAttribute("x2") ?? "0")
@@ -23,7 +23,7 @@ function computeLineBBox(line: SVGLineElement): DOMRect {
   return new DOMRect(minX, minY, width, height)
 }
 
-function computeRect(rect: SVGElement): DOMRect {
+export function computeRect(rect: SVGElement): DOMRect {
   const x = parseFloat(rect.getAttribute("x") || "0")
   const y = parseFloat(rect.getAttribute("y") || "0")
 
@@ -33,7 +33,7 @@ function computeRect(rect: SVGElement): DOMRect {
   return new DOMRect(x, y, width, height)
 }
 
-function computeCircle(circle: SVGElement): DOMRect {
+export function computeCircle(circle: SVGElement): DOMRect {
   const cx = parseFloat(circle.getAttribute("cx") || "0")
   const cy = parseFloat(circle.getAttribute("cy") || "0")
   const r = parseFloat(circle.getAttribute("r") || "0")
@@ -41,7 +41,7 @@ function computeCircle(circle: SVGElement): DOMRect {
   return new DOMRect(cx - r, cy - r, 2 * r, 2 * r)
 }
 
-function computeEllipse(ellipse: SVGElement): DOMRect {
+export function computeEllipse(ellipse: SVGElement): DOMRect {
   const cx = parseFloat(ellipse.getAttribute("cx") || "0")
   const cy = parseFloat(ellipse.getAttribute("cy") || "0")
   const rx = parseFloat(ellipse.getAttribute("rx") || "0")
@@ -50,8 +50,8 @@ function computeEllipse(ellipse: SVGElement): DOMRect {
   return new DOMRect(cx - rx, cy - ry, 2 * rx, 2 * ry)
 }
 
-function computePoly(poly: SVGElement): DOMRect {
-  const points = poly.getAttribute("points").trim()
+export function computePoly(poly: SVGElement): DOMRect {
+  const points = poly.getAttribute("points")?.trim()
   if (!points) return new DOMRect
 
   const numberPoints = points.split(/[\s,]+/).map(Number)
@@ -67,7 +67,7 @@ function computePoly(poly: SVGElement): DOMRect {
   return new DOMRect(minX, minY, maxX - minX, maxY - minY)
 }
 
-function computeFont(element: SVGElement): DOMRect {
+export function computeFont(element: SVGElement): DOMRect {
   const text = element.textContent.replace(/\s+/g, " ")
   if (!text) return new DOMRect
 
@@ -77,10 +77,10 @@ function computeFont(element: SVGElement): DOMRect {
 
   const fontSize = parseFloat(cStyle.fontSize) || 16
   const fontFamily = cStyle.fontFamily.split(",")[0].replace(/['"]/g, "").trim()
-  const font = findFontForFamily(fontFamily)
 
+  const font = findFont(fontFamily)
   if (font == null) {
-    throw new Error(`Font ${font.names.fullName} is not found`)
+    throw new Error(`Font ${fontFamily} is not found`)
   }
 
   const path = font.getPath(text, 0, fontSize * lineHeight / 2, fontSize)
@@ -95,7 +95,7 @@ function computeFont(element: SVGElement): DOMRect {
   return new DOMRect(x, y, width, height)
 }
 
-function computeTspan(element: SVGElement, relative = new DOMRect): DOMRect {
+export function computeTspan(element: SVGElement, relative = new DOMRect): DOMRect {
   if (element.children.length >= 0) return computeFont(element)
 
   const cStyle = window.getComputedStyle(element)
@@ -116,7 +116,20 @@ function computeTspan(element: SVGElement, relative = new DOMRect): DOMRect {
 
   const rect = new DOMRect
   for (const child of element.children) {
-
+    const childBox = compute(child as never)
+    const childTag = child.tagName.toLowerCase()
+    if (childTag === "tspan") {
+      const tspanBox = computeTspan(child as never, relative)
+      rect.x = Math.min(rect.x, tspanBox.x)
+      rect.y = Math.min(rect.y, tspanBox.y)
+      rect.width = Math.max(rect.width, tspanBox.x + tspanBox.width - rect.x)
+      rect.height = Math.max(rect.height, tspanBox.y + tspanBox.height - rect.y)
+    } else {
+      rect.x = Math.min(rect.x, childBox.x + relative.x)
+      rect.y = Math.min(rect.y, childBox.y + relative.y)
+      rect.width = Math.max(rect.width, childBox.x + childBox.width + relative.x - rect.x)
+      rect.height = Math.max(rect.height, childBox.y + childBox.height + relative.y - rect.y)
+    }
   }
 
 
@@ -128,10 +141,10 @@ function computeTspan(element: SVGElement, relative = new DOMRect): DOMRect {
   return rect
 }
 
-function unionTwoDOMRects(r1: DOMRect | undefined, r2: DOMRect): DOMRect
-function unionTwoDOMRects(r1: DOMRect, r2: DOMRect | undefined): DOMRect
-function unionTwoDOMRects(r1: DOMRect, r2: DOMRect): DOMRect {
-  if (!r1) return r2
+function unionTwoDOMRects(r1: DOMRect | null | undefined, r2: DOMRect): DOMRect
+function unionTwoDOMRects(r1: DOMRect, r2: DOMRect | null | undefined): DOMRect
+function unionTwoDOMRects(r1?: DOMRect | null, r2?: DOMRect | null): DOMRect {
+  if (!r1) return r2!
   if (!r2) return r1
 
   const x1 = Math.min(r1.x, r2.x)
@@ -161,7 +174,7 @@ function unionDOMRects(...boxes: DOMRect[]): DOMRect {
 
 
 function parseValue(value: string | undefined | null, fontSize: number): number {
-  if (value == null) return null
+  if (value == null) return 0
   if (value.endsWith("em")) {
     return parseFloat(value) * fontSize
   }
@@ -169,7 +182,7 @@ function parseValue(value: string | undefined | null, fontSize: number): number 
   return parseFloat(value)
 }
 function parseTransform(transform: string, transformOrigin?: string, parentTransform?: Partial<DOMRect>) {
-  const [originX, originY] = transformOrigin.split(" ").map(parseFloat) ?? [0, 0]
+  const [originX, originY] = transformOrigin?.split(" ").map(parseFloat) ?? [0, 0]
 
   return computeTransformedBBox(DOMRect.fromRect(parentTransform), transform, new DOMRect(originX, originY))
 }
@@ -181,7 +194,7 @@ function parseTransform(transform: string, transformOrigin?: string, parentTrans
  * @param [origin={x:0,y:0}] - Transform origin pivot in same coordinate space as rect.
  * @returns The transformed bounding box.
  */
-function computeTransformedBBox(rect: Partial<DOMRect>, transform: string, origin: DOMPointInit = { x: 0, y: 0 }) {
+export function computeTransformedBBox(rect: Partial<DOMRect>, transform: string, origin: DOMPointInit = { x: 0, y: 0 }) {
   const originTranslateStart = `translate(${origin.x}px, ${origin.y}px)`
   const originTranslateEnd = `translate(-${origin.x}px, -${origin.y}px)`
 
@@ -193,6 +206,12 @@ function computeTransformedBBox(rect: Partial<DOMRect>, transform: string, origi
 }
 
 function transformRectToAABB(rect: Partial<DOMRect>, matrix: DOMMatrix) {
+  rect.x ??= 0
+  rect.y ??= 0
+
+  rect.width ??= 0
+  rect.height ??= 0
+
   const points = [
     new DOMPoint(rect.x, rect.y),
     new DOMPoint(rect.x + rect.width, rect.y),
@@ -211,7 +230,7 @@ function transformRectToAABB(rect: Partial<DOMRect>, matrix: DOMMatrix) {
   return new DOMRect(minX, minY, maxX - minX, maxY - minY)
 }
 
-function computeBoundingBox(element: SVGElement): DOMRect {
+export function computeBoundingBox(element: SVGElement): DOMRect {
   const tag = element.tagName.toLowerCase()
 
   // PATH
@@ -225,7 +244,7 @@ function computeBoundingBox(element: SVGElement): DOMRect {
   if (tag === "rect") return computeRect(element)
   if (tag === "circle") return computeCircle(element)
   if (tag === "ellipse") return computeEllipse(element)
-  if (tag === "line") return computeLineBBox(element as never)
+  if (tag === "line") return computeLine(element as never)
   if (tag === "text") return computeTspan(element)
   if (tag === "tspan") return computeTspan(element)
 
@@ -234,7 +253,7 @@ function computeBoundingBox(element: SVGElement): DOMRect {
   return new DOMRect
 }
 
-function getBoundingBox(element: SVGElement, parentTransform = new DOMRect): DOMRect {
+export function compute(element: SVGElement, parentTransform = new DOMRect): DOMRect {
   const localTransform = parseTransform(
     element.getAttribute("transform") ?? "",
     element.getAttribute("transform-origin") ?? "",
@@ -243,7 +262,7 @@ function getBoundingBox(element: SVGElement, parentTransform = new DOMRect): DOM
 
   const tag = element.tagName.toLowerCase()
   if (tag === "g" || tag === "svg") {
-    return unionDOMRects(...Array.from(element.children).map(x => getBoundingBox(x as never, localTransform)))
+    return unionDOMRects(...Array.from(element.children).map(x => compute(x as never, localTransform)))
   }
 
   // Will compute `text` box if it contains only text.
@@ -257,10 +276,13 @@ function getBoundingBox(element: SVGElement, parentTransform = new DOMRect): DOM
   return rect
 }
 
-export default function injectSvgBBoxPolyfill() {
-  Object.defineProperty(globalThis.SVGGraphicsElement.prototype, "getBBox", {
-    configurable: true,
-    writable: true,
-    value: function () { return getBoundingBox(this) }
-  })
+// eslint-disable-next-line prefer-const
+export let fonts: Record<string, Font> = {}
+
+
+function findFont(cssFontFamily: string): Font | null {
+  if (!cssFontFamily) return null
+  // take first family token, lowercased, trimmed, strip quotes
+  const family = cssFontFamily.split(",")[0].replace(/['"]/g, "").trim().toLowerCase()
+  return fonts[family] ?? fonts.default ?? null
 }

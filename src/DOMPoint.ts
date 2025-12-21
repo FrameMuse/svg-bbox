@@ -1,5 +1,5 @@
-function injectDOMPointPolyfill() {
-  DOMPoint.prototype.matrixTransform ??= function (matrix) {
+export function injectDOMPointPolyfill(context: typeof globalThis) {
+  context.DOMPoint.prototype.matrixTransform ??= function (matrix) {
     // We assume 'matrix' is a DOMMatrix or compatible object with a toFloat32Array or properties
     const m = matrix // alias
 
@@ -11,24 +11,24 @@ function injectDOMPointPolyfill() {
 
     // Matrix entries: DOMMatrix uses column-major [a, b, c, d, e, f, m41, m42, m43, m44...]
     // but its transformPoint expects m11, m12, ..., m44
-    const m11 = m.a ?? m.m11
-    const m12 = m.b ?? m.m12
-    const m21 = m.c ?? m.m21
-    const m22 = m.d ?? m.m22
-    const m41 = m.e ?? m.m41
-    const m42 = m.f ?? m.m42
+    const m11 = m?.a ?? m?.m11 ?? 0
+    const m12 = m?.b ?? m?.m12 ?? 0
+    const m21 = m?.c ?? m?.m21 ?? 0
+    const m22 = m?.d ?? m?.m22 ?? 0
+    const m41 = m?.e ?? m?.m41 ?? 0
+    const m42 = m?.f ?? m?.m42 ?? 0
 
     // For 3D:
-    const m13 = m.m13 ?? 0
-    const m23 = m.m23 ?? 0
-    const m31 = m.m31 ?? 0
-    const m32 = m.m32 ?? 0
-    const m33 = m.m33 ?? 1
-    const m43 = m.m43 ?? 0
-    const m14 = m.m14 ?? 0
-    const m24 = m.m24 ?? 0
-    const m34 = m.m34 ?? 0
-    const m44 = m.m44 ?? 1
+    const m13 = m?.m13 ?? 0
+    const m23 = m?.m23 ?? 0
+    const m31 = m?.m31 ?? 0
+    const m32 = m?.m32 ?? 0
+    const m33 = m?.m33 ?? 1
+    const m43 = m?.m43 ?? 0
+    const m14 = m?.m14 ?? 0
+    const m24 = m?.m24 ?? 0
+    const m34 = m?.m34 ?? 0
+    const m44 = m?.m44 ?? 1
 
     // Compute result in homogeneous:
     const x2 = m11 * x + m21 * y + m31 * z + m41 * w
@@ -48,5 +48,3 @@ function injectDOMPointPolyfill() {
     )
   }
 }
-
-export default injectDOMPointPolyfill
