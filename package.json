@@ -3,6 +3,17 @@
   "name": "svg-bbox-polyfill",
   "version": "0.1.0",
   "description": "SVG `getBBox` Polyfill",
+  "keywords": [
+    "svg",
+    "bbox",
+    "polyfill",
+    "bounding box",
+    "getBBox",
+    "dom",
+    "no browser",
+    "ssr",
+    "server side"
+  ],
   "sideEffects": false,
   "main": "build/index.js",
   "types": "build/index.d.ts",
