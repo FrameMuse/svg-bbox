@@ -38,13 +38,11 @@ Register fonts used in SVGs (required for text elements):
 
 ```js
 import opentype from "opentype.js"
-import { SvgBbox } from "svg-bbox-polyfill"
+import { SvgBBox } from "svg-bbox-polyfill"
 
 // Use `opentype.js` or anything that returns `opentype.Font` interface.
-SvgBbox.fonts = {
-  "Arial": await opentype.load("path/to/Arial.ttf"),
-  "Times New Roman": opentype.loadSync("path/to/TimesNewRoman.ttf"),
-}
+SvgBBox.fonts["Arial"] = await opentype.load("path/to/Arial.ttf")
+SvgBBox.fonts["Times New Roman"] = opentype.loadSync("path/to/TimesNewRoman.ttf")
 ```
 
 ## Usage
@@ -52,22 +50,22 @@ SvgBbox.fonts = {
 Compute the bounding box of an SVG element without polyfilling:
 
 ```js
-import { SvgBbox, injectDOMPointPolyfill } from "svg-bbox-polyfill"
+import { SvgBBox, injectDOMPointPolyfill } from "svg-bbox-polyfill"
 
-injectDOMPointPolyfill(globalThis) // In case `matrixTransform` is missing. Apply before `SvgBbox.compute`.
+injectDOMPointPolyfill(globalThis) // In case `matrixTransform` is missing. Apply before `SvgBBox.compute`.
 
-SvgBbox.compute(svgElement)
+SvgBBox.compute(svgElement)
 
 // Other utils:
-SvgBbox.computeLine(lineElement)
-SvgBbox.computeRect(rectElement)
-SvgBbox.computeCircle(circleElement)
-SvgBbox.computeEllipse(ellipseElement)
-SvgBbox.computePoly(polyElement)
-SvgBbox.computeFont(fontElement)
-SvgBbox.computeTspan(tspanElement)
-SvgBbox.computeTransformedBBox(lineElement)
-SvgBbox.computeBoundingBox(rect, transform, origin) // Read inline docs for more details.
+SvgBBox.computeLine(lineElement)
+SvgBBox.computeRect(rectElement)
+SvgBBox.computeCircle(circleElement)
+SvgBBox.computeEllipse(ellipseElement)
+SvgBBox.computePoly(polyElement)
+SvgBBox.computeFont(fontElement)
+SvgBBox.computeTspan(tspanElement)
+SvgBBox.computeTransformedBBox(lineElement)
+SvgBBox.computeBoundingBox(rect, transform, origin) // Read inline docs for more details.
 ```
 
 Inject the polyfill for `SVGGraphicsElement` (base class for all SVG elements):
