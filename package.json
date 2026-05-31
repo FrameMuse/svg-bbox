@@ -38,13 +38,13 @@
     "vite": "^7.1.3",
     "vite-plugin-externalize-deps": "^0.10.0"
   },
-  "homepage": "https://github.com/pinely-international/svg-bbox#readme",
+  "homepage": "https://github.com/framemuse/svg-bbox#readme",
   "bugs": {
-    "url": "https://github.com/pinely-international/svg-bbox/issues"
+    "url": "https://github.com/framemuse/svg-bbox/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pinely-international/svg-bbox.git"
+    "url": "git+https://github.com/framemuse/svg-bbox.git"
   },
   "license": "MIT",
   "author": "FrameMuse"
