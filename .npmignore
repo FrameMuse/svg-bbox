@@ -1,0 +1,7 @@
+.env*
+*.tgz
+tsconfig.*
+vite.*
+.vscode
+_*
+src
